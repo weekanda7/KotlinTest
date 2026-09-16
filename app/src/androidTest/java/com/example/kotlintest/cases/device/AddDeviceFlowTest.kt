@@ -6,6 +6,7 @@ import com.example.kotlintest.DeviceCatalog
 import com.example.kotlintest.DeviceListActivity
 import com.example.kotlintest.IdlingResourceRule
 import com.example.kotlintest.R
+import com.example.kotlintest.RandomTestData
 import com.example.kotlintest.ResetDeviceCatalogRule
 import com.example.kotlintest.pages.common.DeviceRowActions
 import com.example.kotlintest.pages.common.SnackbarAssertions
@@ -30,9 +31,11 @@ class AddDeviceFlowTest {
 
     @Test
     fun addingDevice_appearsInListWithConfirmation() {
+        val deviceName = RandomTestData.deviceName()
+
         DeviceListPage.tapAddDevice()
 
-        AddDevicePage.enterName("testdevice")
+        AddDevicePage.enterName(deviceName)
         AddDevicePage.enterIpAddress("10.0.0.99")
         AddDevicePage.selectType("Router")
         AddDevicePage.setInstallDate(2026, 1, 15)
@@ -43,13 +46,13 @@ class AddDeviceFlowTest {
         // Confirms the save actually persisted the right name at the data layer,
         // independent of whether the RecyclerView has finished laying out the newly
         // added row yet.
-        assertEquals("testdevice", DeviceCatalog.all.last().name)
+        assertEquals(deviceName, DeviceCatalog.all.last().name)
 
         // Force the RecyclerView to lay out the just-inserted row before asserting on
         // it - notifyDataSetChanged() growing the item count can otherwise leave the
         // new position unbound at the moment Espresso's idle check passes.
         DeviceRowActions.scrollToPosition(DeviceCatalog.all.size - 1)
-        DeviceRowActions.assertRowVisible("testdevice")
+        DeviceRowActions.assertRowVisible(deviceName)
     }
 
     @Test
