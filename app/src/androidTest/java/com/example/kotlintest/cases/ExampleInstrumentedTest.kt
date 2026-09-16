@@ -1,4 +1,4 @@
-package com.example.kotlintest
+package com.example.kotlintest.cases
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
