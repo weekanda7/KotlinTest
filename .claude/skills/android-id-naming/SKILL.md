@@ -139,6 +139,7 @@ onView(withText(R.string.action_confirm)).inRoot(isDialog()).perform(click())
 - **通用名稱容易撞名**：`text_title`、`text_name` 這類 id 只在有容器限定時使用。
 - **把 id 列入 PR checklist**，避免功能做完才發現缺漏。
 - **UI 框架無法加 id 的元素**（popup 選項、動態 chip），在清單中註明替代定位方式。
+- **測試有大改動或新增時，同步維護對應的 skill 文件**：新增畫面要同時補 `.claude/skills/screen-*` 與對應的 Page Object（見 [[test-architecture]]）；androidTest 目錄結構、Rule 慣例、共用 helper 有變動時，更新 `test-architecture` skill；命名規則本身有調整則更新本文件。skill 文件描述的是「現在的程式碼長什麼樣子」，程式碼改了但文件沒跟著改，之後的人（或 AI）會照著過時的規範做事。
 
 ---
 
