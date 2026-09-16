@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,7 +7,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.test1.databinding.ActivityLoginBinding
+import com.example.kotlintest.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
 

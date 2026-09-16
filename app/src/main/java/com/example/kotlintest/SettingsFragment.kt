@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.example.test1.databinding.FragmentSettingsBinding
+import com.example.kotlintest.databinding.FragmentSettingsBinding
 import com.google.android.material.snackbar.Snackbar
 
 class SettingsFragment : Fragment() {

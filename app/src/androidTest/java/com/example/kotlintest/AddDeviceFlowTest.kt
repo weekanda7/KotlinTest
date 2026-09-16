@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.widget.DatePicker
 import androidx.recyclerview.widget.RecyclerView

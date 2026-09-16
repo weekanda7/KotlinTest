@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 data class Device(
     val id: String,

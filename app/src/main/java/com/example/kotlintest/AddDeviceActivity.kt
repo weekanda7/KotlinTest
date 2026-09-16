@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.app.DatePickerDialog
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.test1.databinding.ActivityAddDeviceBinding
+import com.example.kotlintest.databinding.ActivityAddDeviceBinding
 import java.util.Calendar
 
 class AddDeviceActivity : AppCompatActivity() {

@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description

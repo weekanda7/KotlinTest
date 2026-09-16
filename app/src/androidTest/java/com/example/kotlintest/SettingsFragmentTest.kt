@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.Manifest
 import android.content.Context

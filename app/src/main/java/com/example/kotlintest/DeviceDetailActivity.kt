@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,7 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.test1.databinding.ActivityDeviceDetailBinding
+import com.example.kotlintest.databinding.ActivityDeviceDetailBinding
 
 class DeviceDetailActivity : AppCompatActivity() {
 

@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import androidx.test.espresso.IdlingRegistry
 import org.junit.rules.TestWatcher

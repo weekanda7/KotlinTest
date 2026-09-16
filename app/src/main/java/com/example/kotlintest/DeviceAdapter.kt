@@ -1,10 +1,10 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.example.test1.databinding.ItemDeviceBinding
+import com.example.kotlintest.databinding.ItemDeviceBinding
 
 class DeviceAdapter(
     private var devices: List<Device>,

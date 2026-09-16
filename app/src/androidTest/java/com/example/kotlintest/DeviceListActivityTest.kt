@@ -1,4 +1,4 @@
-package com.example.test1
+package com.example.kotlintest
 
 import androidx.appcompat.R as AppCompatR
 import androidx.recyclerview.widget.RecyclerView

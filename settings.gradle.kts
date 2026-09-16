@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "test1"
+rootProject.name = "KotlinTest"
 include(":app")

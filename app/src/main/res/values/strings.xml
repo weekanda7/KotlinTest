@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">test1</string>
+    <string name="app_name">KotlinTest</string>
 
     <string name="content_description_logo">App logo</string>
 

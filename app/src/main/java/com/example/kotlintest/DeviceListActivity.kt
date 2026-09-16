@@ -1,11 +1,11 @@
-package com.example.test1
+package com.example.kotlintest
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
-import com.example.test1.databinding.ActivityDeviceListBinding
+import com.example.kotlintest.databinding.ActivityDeviceListBinding
 
 class DeviceListActivity : AppCompatActivity() {
 
