@@ -1,17 +1,18 @@
-package com.example.kotlintest
+package com.example.kotlintest.cases.setting
 
 import android.Manifest
 import android.content.Context
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isChecked
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
+import com.example.kotlintest.DeviceListActivity
+import com.example.kotlintest.IdlingResourceRule
+import com.example.kotlintest.ResetDeviceCatalogRule
+import com.example.kotlintest.SettingsPreferences
+import com.example.kotlintest.pages.SettingsPage
+import com.example.kotlintest.pages.device.DeviceListPage
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -41,7 +42,7 @@ class SettingsFragmentTest {
 
     @Before
     fun openSettingsTab() {
-        onView(withId(R.id.navigation_settings)).perform(click())
+        DeviceListPage.openSettingsTab()
     }
 
     @After
@@ -53,19 +54,19 @@ class SettingsFragmentTest {
 
     @Test
     fun togglingAutoRefresh_persistsAcrossRelaunch() {
-        onView(withId(R.id.switch_auto_refresh)).perform(click())
+        SettingsPage.toggleAutoRefresh()
 
         activityRule.scenario.close()
         ActivityScenario.launch(DeviceListActivity::class.java).use {
-            onView(withId(R.id.navigation_settings)).perform(click())
-            onView(withId(R.id.switch_auto_refresh)).check(matches(isChecked()))
+            DeviceListPage.openSettingsTab()
+            SettingsPage.assertAutoRefreshChecked()
         }
     }
 
     @Test
     fun togglingNotifications_withPermissionGranted_staysChecked() {
-        onView(withId(R.id.switch_notifications)).perform(click())
+        SettingsPage.toggleNotifications()
 
-        onView(withId(R.id.switch_notifications)).check(matches(isChecked()))
+        SettingsPage.assertNotificationsChecked()
     }
 }

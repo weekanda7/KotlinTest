@@ -1,13 +1,14 @@
-package com.example.kotlintest
+package com.example.kotlintest.cases.device
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.kotlintest.DeviceCatalog
+import com.example.kotlintest.DeviceDetailActivity
+import com.example.kotlintest.R
+import com.example.kotlintest.ResetDeviceCatalogRule
+import com.example.kotlintest.pages.device.DeviceDetailPage
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,8 +31,8 @@ class DeviceDetailActivityTest {
     fun offlineDevice_showsNameStatusAndIp() {
         val device = DeviceCatalog.findById("4")!!
 
-        onView(withId(R.id.text_name)).check(matches(withText(device.name)))
-        onView(withId(R.id.text_status)).check(matches(withText(R.string.text_status_offline)))
-        onView(withId(R.id.text_ip_address)).check(matches(withText(device.ipAddress)))
+        DeviceDetailPage.assertName(device.name)
+        DeviceDetailPage.assertStatus(R.string.text_status_offline)
+        DeviceDetailPage.assertIpAddress(device.ipAddress)
     }
 }
