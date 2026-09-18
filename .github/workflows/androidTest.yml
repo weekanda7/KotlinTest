@@ -28,6 +28,14 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           ls -l /dev/kvm
 
+      # Ubuntu 24.04 runner images no longer ship libpulse0, and the emulator's qemu binary is
+      # linked against libpulse.so.0 - without it `emulator -version` dies with "error while
+      # loading shared libraries" (lower-case, so GMD's ERROR filter never shows it).
+      - name: Install host libraries the emulator needs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libpulse0
+
       # The emulator (~300 MB) and the system images (~1 GB each) are not on the runner image.
       # Restore them from cache when nothing about the devices changed; the sdkmanager step
       # below is then a no-op. (~/.android/avd/gradle-managed is deliberately NOT cached: a
@@ -57,6 +65,10 @@ jobs:
             "emulator" \
             "system-images;android-33;aosp_atd;x86_64" \
             "system-images;android-37.0;google_apis;x86_64"
+          # Both engines must at least load: the windowed one (needs libpulse0) and the
+          # headless one that -no-window selects, which is what GMD actually runs.
+          "$SDK_ROOT/emulator/emulator" -version | head -n 3 || echo "::warning::windowed emulator engine failed to load"
+          "$SDK_ROOT/emulator/emulator" -no-window -version | head -n 3 || echo "::warning::headless emulator engine failed to load"
 
       # Same major as gradle/gradle-daemon-jvm.properties (toolchainVersion=25), so Gradle
       # picks this JDK for the daemon instead of provisioning a second one via foojay.
@@ -77,42 +89,49 @@ jobs:
       # an empty env var as "not provided" and falls back to secrets.defaults.properties.
       # --continue: if one device fails to boot, still set up and run the other one, so a
       #   single run tells us whether the problem is device-specific (ATD vs google image).
+      # --debug: AvdSnapshotHandler logs every line the emulator prints at debug level and
+      #   surfaces only the ones containing "ERROR", so this is the only way to see why an
+      #   emulator died. The full log goes to a file (uploaded below); the console keeps
+      #   the normal lifecycle/warning/error lines only.
       - name: Run instrumented tests on Gradle-managed devices
-        run: >
-          ./gradlew ciGroupDebugAndroidTest
-          --continue
-          --max-workers=1
-          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+        run: |
+          set -o pipefail
+          ./gradlew ciGroupDebugAndroidTest \
+            --continue \
+            --max-workers=1 \
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            --debug 2>&1 | tee gradle-debug.log | grep -E '\[(LIFECYCLE|WARN|ERROR|QUIET)\]'
         env:
           TEST_LOGIN_EMAIL: ${{ secrets.TEST_LOGIN_EMAIL }}
           TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
 
-      # GMD only surfaces emulator lines containing "ERROR" (AvdSnapshotHandler.kt) and logs
-      # the rest at debug level, so "Error message from emulator process = []" means the
-      # emulator died without saying "ERROR" - a loader failure, a PANIC, or a crash. This
-      # step reproduces GMD's launch by hand and prints what the emulator actually says.
+      # What the emulator itself said during GMD's own launches (from the debug log), then a
+      # by-hand launch with GMD's flags so the tail of the boot is visible even if GMD deleted
+      # its AVD on failure (it did last time: ~/.android/avd/gradle-managed was gone).
       - name: Emulator diagnostics
         if: failure()
         run: |
+          echo "==== emulator output captured by GMD (AvdSnapshotHandler, last 300 lines) ===="
+          grep -F 'AvdSnapshotHandler' gradle-debug.log | tail -n 300 || echo "(no AvdSnapshotHandler lines in gradle-debug.log)"
           set -x
-          id
           ls -l /dev/kvm || true
           EMU="$SDK_ROOT/emulator/emulator"
-          "$EMU" -version || true
           "$EMU" -accel-check || true
-          ldd "$SDK_ROOT/emulator/qemu/linux-x86_64/qemu-system-x86_64-headless" | grep -i "not found" || echo "headless qemu: no missing shared libraries"
-          export ANDROID_AVD_HOME="$HOME/.android/avd/gradle-managed"
-          ls -la "$ANDROID_AVD_HOME" || true
-          cat "$ANDROID_AVD_HOME"/*.avd/config.ini || true
-          AVD="$(ls "$ANDROID_AVD_HOME" 2>/dev/null | grep -m1 '\.ini$' | sed 's/\.ini$//' || true)"
-          if [ -z "$AVD" ]; then
+          find "$HOME/.android" -maxdepth 4 \( -name '*.ini' -o -name '*.avd' \) 2>/dev/null || true
+          GMD_INI="$(find "$HOME/.android" -maxdepth 4 -name 'dev*.ini' 2>/dev/null | head -n 1 || true)"
+          if [ -n "$GMD_INI" ]; then
+            export ANDROID_AVD_HOME="$(dirname "$GMD_INI")"
+            AVD="$(basename "$GMD_INI" .ini)"
+            cat "$ANDROID_AVD_HOME/$AVD.avd/config.ini" || true
+          else
+            echo "GMD left no AVD behind - creating a throwaway one from the same ATD image"
             AVDMANAGER="$(command -v avdmanager || ls "$SDK_ROOT"/cmdline-tools/*/bin/avdmanager | head -n 1)"
-            echo no | "$AVDMANAGER" create avd -n diag -k "system-images;android-33;aosp_atd;x86_64" -d pixel_8 --force \
-              || echo no | "$AVDMANAGER" create avd -n diag -k "system-images;android-33;aosp_atd;x86_64" --force
+            echo no | "$AVDMANAGER" create avd -n diag -k "system-images;android-33;aosp_atd;x86_64" --force
             AVD=diag
+            ls -la "$HOME/.android/avd" || true
           fi
           echo "==== booting @$AVD by hand with GMD's flags (150 s cap) ===="
-          timeout 150 "$EMU" "@$AVD" -no-window -no-boot-anim -no-audio -gpu swiftshader_indirect -no-snapshot-load -verbose -show-kernel 2>&1 | tail -n 200 || true
+          timeout 150 "$EMU" "@$AVD" -no-window -no-boot-anim -no-audio -gpu swiftshader_indirect -no-snapshot-load -verbose -show-kernel 2>&1 | tail -n 250 || true
 
       - name: Upload test reports
         if: always()
@@ -122,3 +141,4 @@ jobs:
           path: |
             app/build/reports/androidTests/managedDevice/
             app/build/outputs/androidTest-results/managedDevice/
+            gradle-debug.log
