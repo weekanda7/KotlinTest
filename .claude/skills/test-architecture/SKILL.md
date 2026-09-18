@@ -71,7 +71,7 @@ Adding a new injectable dependency: declare it on `AppContainer`, wire the real 
 
 `@get:Rule(order = N)`, smallest first:
 
-0. Permission rules (`GrantPermissionRule`), if the screen needs one
+0. Permission rules (`GrantPermissionRule`), if the screen needs one - gated on `Build.VERSION.SDK_INT` when the permission does not exist on an older API level in the device matrix (`POST_NOTIFICATIONS` is API 33+; `SettingsFragmentTest` substitutes a no-op `TestRule` below that, because `pm grant` of an unknown permission fails the test before its body runs)
 0/1. `ResetDeviceCatalogRule` - must run before `ActivityScenarioRule` so a previous test's leftover state can't leak into this one (`DeviceCatalog` is a process-wide singleton and there is no AndroidTestOrchestrator)
 last. `ActivityScenarioRule` - launches the Activity under test, always last so earlier rules' setup is already in place
 

@@ -95,6 +95,22 @@ Activity 有起來、DecorView 有畫出來，但 WindowManager 一直沒把視�
 
 ---
 
+## 10. `GrantPermissionRule` 遇到該 API 還不存在的權限，會在測試開始前就直接失敗
+
+CI matrix 加入 API 30 的 ATD 之後，`SettingsFragmentTest` 兩條都掛在 rule 階段，測試本體根本沒跑：
+
+```
+junit.framework.AssertionFailedError: Failed to grant permissions, see logcat for details
+    at androidx.test.runner.permission.PermissionRequester.requestPermissions
+    at androidx.test.rule.GrantPermissionRule$RequestPermissionStatement.evaluate
+```
+
+`GrantPermissionRule` 背後是 `pm grant <package> <permission>`，而 `POST_NOTIFICATIONS` 是 API 33 才有的 runtime permission，在 API 30 上 `pm` 不認得這個權限就報錯。同一份測試在 API 33 的 ATD 和本機 Android 17 都是綠的，所以這種失敗只會在「裝置矩陣往低 API 延伸」時冒出來。
+
+**做法**：rule 依 `Build.VERSION.SDK_INT` 決定要不要真的 grant，低於 33 給一個什麼都不做的 `TestRule { base, _ -> base }`。這樣做是合理的，因為 `SettingsFragment` 本身在 33 以下就會跳過權限檢查直接存 `true`，測試在兩種 API 上驗證的是各自正確的路徑。通則：**任何跟 API level 綁定的測試前置動作（權限、系統設定、`UiAutomator` 操作），都要跟 production code 用同一個 SDK 判斷**，否則測試矩陣一擴大就會在最舊的那台上炸。
+
+---
+
 ## 8. 除錯方法論小結
 
 這次排查全程都是靠貼 `./gradlew connectedAndroidTest` 的完整輸出，不是憑感覺猜：
