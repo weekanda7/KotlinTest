@@ -1,0 +1,63 @@
+name: androidTest
+
+on: [push, pull_request]
+
+# A newer push to the same branch/PR cancels the run that is still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gmd:
+    runs-on: ubuntu-latest
+    # A wedged emulator boot would otherwise burn the 6-hour default.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      # Hosted Linux runners expose /dev/kvm, but only root may open it until this rule runs.
+      # Without it the emulator falls back to software virtualization and boot takes forever.
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # Same major as gradle/gradle-daemon-jvm.properties (toolchainVersion=25), so Gradle
+      # picks this JDK for the daemon instead of provisioning a second one via foojay.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      # Caches the Gradle user home (wrapper dist, dependency cache) between runs.
+      - uses: gradle/actions/setup-gradle@v6
+
+      # System images (~1 GB each) are not on the runner image and would be downloaded on
+      # every run. Key on the build script so a new device / API level busts the cache.
+      # (Deliberately NOT caching ~/.android/avd/gradle-managed: a saved snapshot is only
+      # valid for the exact emulator build that made it, and the runner image updates the
+      # emulator regularly, so AGP would just discard it and re-create the AVD anyway.)
+      - name: Cache Android system images
+        uses: actions/cache@v6
+        with:
+          path: /usr/local/lib/android/sdk/system-images
+          key: android-system-images-${{ runner.os }}-${{ hashFiles('app/build.gradle.kts') }}
+
+      # swiftshader_indirect = software GPU; hosted runners have no GPU (official GMD docs).
+      # The login fixture secrets are optional: secretProperty() in app/build.gradle.kts treats
+      # an empty env var as "not provided" and falls back to secrets.defaults.properties.
+      - name: Run instrumented tests on Gradle-managed devices
+        run: ./gradlew ciGroupDebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+        env:
+          TEST_LOGIN_EMAIL: ${{ secrets.TEST_LOGIN_EMAIL }}
+          TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: androidTest-reports
+          path: |
+            app/build/reports/androidTests/managedDevice/
+            app/build/outputs/androidTest-results/managedDevice/
