@@ -16,3 +16,7 @@ local.properties
 .kotlin
 .claude/scheduled_tasks.lock
 /secrets.properties
+/.idea/deviceHardwareInput.xml
+/.idea/deviceManager.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/androidTestResultsUserPreferences.xml
