@@ -39,7 +39,7 @@ Started via `addDeviceLauncher.launch(...)` from `DeviceListFragment`, no extras
 
 ## Window insets & back-arrow gotcha
 
-Root view `add_device` has `ViewCompat.setOnApplyWindowInsetsListener` padding for `systemBars()`, and `app:navigationIcon` is `@drawable/ic_arrow_back` (not `?attr/homeAsUpIndicator`) — same fix as [[screen-device-detail]] and [[screen-device-list-shell]], see [[edge-to-edge-insets]].
+Root view `add_device` calls `applySystemBarInsetsPadding()` for the `systemBars()` insets, and `app:navigationIcon` is `@drawable/ic_arrow_back` (not `?attr/homeAsUpIndicator`) — same fix as [[screen-device-detail]] and [[screen-device-list-shell]], see [[edge-to-edge-insets]].
 
 ## Navigation
 

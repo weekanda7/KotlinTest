@@ -22,6 +22,10 @@ class DeviceListFragment : Fragment() {
     private var allDevices: List<Device> = emptyList()
     private var currentQuery: String = ""
 
+    private val deviceRepository: DeviceRepository by lazy {
+        requireContext().appContainer.deviceRepository
+    }
+
     private val addDeviceLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
@@ -92,7 +96,7 @@ class DeviceListFragment : Fragment() {
         binding.recyclerDevices.visibility = View.GONE
         binding.textEmptyState.visibility = View.GONE
 
-        DeviceRepository.loadDevices { devices ->
+        deviceRepository.loadDevices { devices ->
             if (_binding == null) return@loadDevices
 
             allDevices = devices

@@ -2,9 +2,9 @@ package com.example.kotlintest.cases.login
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.kotlintest.BuildConfig
 import com.example.kotlintest.LoginActivity
 import com.example.kotlintest.R
+import com.example.kotlintest.TestArguments
 import com.example.kotlintest.pages.HomePage
 import com.example.kotlintest.pages.LoginPage
 import org.junit.Rule
@@ -14,11 +14,12 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class LoginActivityTest {
 
-    // Sourced from BuildConfig (secrets.properties/env var, see secretProperty()
-    // in app/build.gradle.kts) instead of hardcoded here, so the test account can
-    // be swapped without touching test code.
-    private val testEmail = BuildConfig.TEST_LOGIN_EMAIL
-    private val testPassword = BuildConfig.TEST_LOGIN_PASSWORD
+    // Sourced from the instrumentation arguments that app/build.gradle.kts passes to the
+    // test APK (fed by secretProperty(): env var -> secrets.properties -> default), so the
+    // test account can be swapped without touching test code - and without baking
+    // test-only values into the app's BuildConfig.
+    private val testEmail = TestArguments.require("testLoginEmail")
+    private val testPassword = TestArguments.require("testLoginPassword")
 
     @get:Rule
     val activityRule = ActivityScenarioRule(LoginActivity::class.java)

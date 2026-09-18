@@ -49,6 +49,8 @@ Espresso 會自動同步 UI thread 的 `Looper` 訊息佇列和動畫，但**看
 - 沒註冊 `IdlingResource` 就去戳 UI：會依裝置速度隨機出現 `NoMatchingViewException`，快的裝置可能剛好蒙混過去，CI 上機器變慢就開始跳。
 - 解法：用 `CountingIdlingResource`（`androidx.test.espresso:espresso-idling-resource`，**要放在 `implementation`，不是 `androidTestImplementation`** — 因為要在 production code 裡呼叫 increment/decrement），背景工作開始前 `increment()`、拿到結果後 `decrement()`；測試端寫一個 `TestWatcher`，在 `starting()`/`finished()` 呼叫 `IdlingRegistry.getInstance().register/unregister`，用 `@get:Rule(order = 0)`（比 `ActivityScenarioRule` 更外層）確保 Activity 啟動前就註冊好。
 
+**後續演進（已取代上面的做法）**：`IdlingResource` 解決的是「Espresso 看不到背景執行緒」，但代價是 production code 裡多了一個只為測試存在的 `CountingIdlingResource`（連 `espresso-idling-resource` 都會打進正式 APK），而且每支清單測試仍然真的等 1.2 秒。根本解法是把「非同步取資料」抽成介面 `DeviceRepository`，由 `AppContainer` 決定用哪個實作：正式版是背景執行緒 + 延遲的 `SimulatedNetworkDeviceRepository`；androidTest 透過自訂的 `InstrumentedTestRunner` 改用 `TestApp` 啟動，注入把結果直接 `post` 到 main looper 的 `FakeDeviceRepository`。Espresso 本來就會在每次 `onView()` 前把 main looper 的訊息佇列跑完，所以 fake 不需要任何 IdlingResource 就能同步。`EspressoIdlingResource`、`IdlingResourceRule` 因此已移除；保留這一節，是因為「先知道 IdlingResource 怎麼用、再知道什麼時候不該用它」才是這段真正學到的東西（細節見 `.claude/skills/test-architecture` 第 3 節）。
+
 ---
 
 ## 5. process-wide 的可變單例會讓測試互相汙染

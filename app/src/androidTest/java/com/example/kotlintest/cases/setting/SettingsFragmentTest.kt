@@ -8,7 +8,6 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
 import com.example.kotlintest.DeviceListActivity
-import com.example.kotlintest.IdlingResourceRule
 import com.example.kotlintest.ResetDeviceCatalogRule
 import com.example.kotlintest.SettingsPreferences
 import com.example.kotlintest.pages.SettingsPage
@@ -31,13 +30,7 @@ class SettingsFragmentTest {
     @get:Rule(order = 1)
     val resetDeviceCatalogRule = ResetDeviceCatalogRule()
 
-    // DeviceListFragment is created (just hidden) as soon as DeviceListActivity starts,
-    // so its simulated network load still runs even when landing straight on the
-    // Settings tab - the idling resource is needed here too.
     @get:Rule(order = 2)
-    val idlingResourceRule = IdlingResourceRule()
-
-    @get:Rule(order = 3)
     val activityRule = ActivityScenarioRule(DeviceListActivity::class.java)
 
     @Before

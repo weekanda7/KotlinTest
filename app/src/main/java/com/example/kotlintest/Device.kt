@@ -12,8 +12,9 @@ data class Device(
 /**
  * In-memory only - stands in for a local DB / network cache. Because this is a
  * process-wide singleton, instrumented tests that mutate it (add/delete) must call
- * [reset] in @Before, otherwise state leaks between tests that share the same
- * instrumentation process (no AndroidTestOrchestrator here).
+ * [reset] before the Activity under test launches (androidTest `ResetDeviceCatalogRule`),
+ * otherwise state leaks between tests that share the same instrumentation process
+ * (no AndroidTestOrchestrator here).
  */
 object DeviceCatalog {
 

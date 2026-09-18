@@ -4,7 +4,6 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.kotlintest.DeviceCatalog
 import com.example.kotlintest.DeviceListActivity
-import com.example.kotlintest.IdlingResourceRule
 import com.example.kotlintest.R
 import com.example.kotlintest.RandomTestData
 import com.example.kotlintest.ResetDeviceCatalogRule
@@ -24,9 +23,6 @@ class AddDeviceFlowTest {
     val resetDeviceCatalogRule = ResetDeviceCatalogRule()
 
     @get:Rule(order = 1)
-    val idlingResourceRule = IdlingResourceRule()
-
-    @get:Rule(order = 2)
     val activityRule = ActivityScenarioRule(DeviceListActivity::class.java)
 
     @Test

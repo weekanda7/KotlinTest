@@ -4,8 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.kotlintest.databinding.ActivityHomeBinding
 
 class HomeActivity : AppCompatActivity() {
@@ -17,11 +15,7 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.home) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        binding.home.applySystemBarInsetsPadding()
 
         val username = intent.getStringExtra(EXTRA_USERNAME).orEmpty()
         val rememberMe = intent.getBooleanExtra(EXTRA_REMEMBER_ME, false)

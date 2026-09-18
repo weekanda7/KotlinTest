@@ -31,7 +31,7 @@ Started from `HomeActivity` (`button_view_devices`), no extras.
 
 ## Window insets & back-arrow gotcha
 
-Root view `device_list` has `ViewCompat.setOnApplyWindowInsetsListener` padding for `systemBars()`, and the toolbar's `app:navigationIcon` is `@drawable/ic_arrow_back` (a bundled vector, not `?attr/homeAsUpIndicator`). Both were bugs fixed in the same pass — see [[edge-to-edge-insets]] for why a missing insets listener makes the back arrow visually overlap the status bar and stop receiving taps, and why `?attr/homeAsUpIndicator` silently resolves to no icon under `Theme.Material3.DayNight.NoActionBar` (no `setSupportActionBar()` call anywhere in this app).
+Root view `device_list` calls `applySystemBarInsetsPadding()` for the `systemBars()` insets, and the toolbar's `app:navigationIcon` is `@drawable/ic_arrow_back` (a bundled vector, not `?attr/homeAsUpIndicator`). Both were bugs fixed in the same pass — see [[edge-to-edge-insets]] for why a missing insets listener makes the back arrow visually overlap the status bar and stop receiving taps, and why `?attr/homeAsUpIndicator` silently resolves to no icon under `Theme.Material3.DayNight.NoActionBar` (no `setSupportActionBar()` call anywhere in this app).
 
 ## Navigation
 

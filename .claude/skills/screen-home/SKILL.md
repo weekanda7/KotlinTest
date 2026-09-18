@@ -33,7 +33,7 @@ Started only from `LoginActivity` (both the real login and the debug skip button
 
 ## Window insets
 
-Root view `home` has the standard `ViewCompat.setOnApplyWindowInsetsListener` padding for `systemBars()` (see [[edge-to-edge-insets]]).
+Root view `home` calls `applySystemBarInsetsPadding()`, which adds the `systemBars()` insets on top of the layout's 24dp padding (see [[edge-to-edge-insets]], Bug 3, for why the old listener lost that padding).
 
 ## Navigation
 

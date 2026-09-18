@@ -37,7 +37,7 @@ This is the app's launcher screen (`android:name=".LoginActivity"` is the only a
 
 ## Window insets
 
-Root view `main` has a `ViewCompat.setOnApplyWindowInsetsListener` that pads for `systemBars()` insets — required because `targetSdk 37` forces edge-to-edge by default (see [[edge-to-edge-insets]]).
+Root view `main` calls `applySystemBarInsetsPadding()` (`WindowInsetsExtensions.kt`), which adds the `systemBars()` insets on top of the layout's 24dp padding — required because `targetSdk 37` forces edge-to-edge by default. The template listener it replaced wiped that 24dp padding out (see [[edge-to-edge-insets]], Bug 3).
 
 ## Navigation
 

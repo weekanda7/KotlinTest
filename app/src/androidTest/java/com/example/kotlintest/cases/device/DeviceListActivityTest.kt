@@ -4,7 +4,6 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.kotlintest.DeviceCatalog
 import com.example.kotlintest.DeviceListActivity
-import com.example.kotlintest.IdlingResourceRule
 import com.example.kotlintest.R
 import com.example.kotlintest.ResetDeviceCatalogRule
 import com.example.kotlintest.pages.SettingsPage
@@ -22,15 +21,13 @@ class DeviceListActivityTest {
     val resetDeviceCatalogRule = ResetDeviceCatalogRule()
 
     @get:Rule(order = 1)
-    val idlingResourceRule = IdlingResourceRule()
-
-    @get:Rule(order = 2)
     val activityRule = ActivityScenarioRule(DeviceListActivity::class.java)
 
     @Test
     fun deviceList_hidesProgressBarOnceLoaded() {
-        // Espresso blocks here until EspressoIdlingResource is idle, i.e. until
-        // DeviceRepository's simulated network delay has finished.
+        // FakeDeviceRepository (wired in by TestApp) posts its result to the main looper,
+        // and Espresso drains that queue before every onView() - so the load callback has
+        // already fired by the time this assertion runs. No IdlingResource, no sleep.
         DeviceListPage.assertProgressBarHidden()
         DeviceListPage.assertListVisible()
     }

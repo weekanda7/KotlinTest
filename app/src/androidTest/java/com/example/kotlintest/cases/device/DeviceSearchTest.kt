@@ -4,7 +4,6 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.kotlintest.DeviceCatalog
 import com.example.kotlintest.DeviceListActivity
-import com.example.kotlintest.IdlingResourceRule
 import com.example.kotlintest.ResetDeviceCatalogRule
 import com.example.kotlintest.pages.common.DeviceRowActions
 import com.example.kotlintest.pages.device.DeviceListPage
@@ -19,14 +18,12 @@ class DeviceSearchTest {
     val resetDeviceCatalogRule = ResetDeviceCatalogRule()
 
     @get:Rule(order = 1)
-    val idlingResourceRule = IdlingResourceRule()
-
-    @get:Rule(order = 2)
     val activityRule = ActivityScenarioRule(DeviceListActivity::class.java)
 
-    // search_devices is always expanded (android:iconifiedByDefault="false"), so its query
-    // field is present as soon as the idling resource confirms the initial load finished -
-    // no click-to-expand step needed.
+    // search_devices is always expanded (app:iconifiedByDefault="false"), so its query
+    // field is present as soon as the initial load has finished - which Espresso waits
+    // for on its own, because FakeDeviceRepository delivers on the main looper. No
+    // click-to-expand step needed.
     //
     // DeviceListPage.search() uses replaceText() to set the query field's content directly
     // instead of simulating keystrokes through the IME - typeText() here was observed to

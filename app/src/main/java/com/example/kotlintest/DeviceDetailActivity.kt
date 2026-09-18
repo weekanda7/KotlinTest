@@ -4,8 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.kotlintest.databinding.ActivityDeviceDetailBinding
 
 class DeviceDetailActivity : AppCompatActivity() {
@@ -18,11 +16,7 @@ class DeviceDetailActivity : AppCompatActivity() {
         binding = ActivityDeviceDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        ViewCompat.setOnApplyWindowInsetsListener(binding.deviceDetail) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        binding.deviceDetail.applySystemBarInsetsPadding()
 
         binding.toolbar.setNavigationOnClickListener { finish() }
 

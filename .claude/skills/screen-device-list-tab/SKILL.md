@@ -5,7 +5,7 @@ description: Reference for the Devices tab content (DeviceListFragment / fragmen
 
 # Devices Tab (DeviceListFragment)
 
-**Files**: `DeviceListFragment.kt`, `res/layout/fragment_device_list.xml`, `res/layout/item_device.xml`, `DeviceAdapter.kt`, `DeviceRepository.kt`, `Device.kt` (`DeviceCatalog`), `DeviceSearchTest.kt`, `AddDeviceFlowTest.kt`, `DeleteDeviceFlowTest.kt`
+**Files**: `DeviceListFragment.kt`, `res/layout/fragment_device_list.xml`, `res/layout/item_device.xml`, `DeviceAdapter.kt`, `DeviceRepository.kt`, `AppContainer.kt`, `KotlinTestApp.kt`, `Device.kt` (`DeviceCatalog`), `DeviceSearchTest.kt`, `AddDeviceFlowTest.kt`, `DeleteDeviceFlowTest.kt`
 
 ## Purpose
 
@@ -25,12 +25,12 @@ Row layout (`item_device.xml`, inside `MaterialCardView` `card_device`): `image_
 
 ## Data source
 
-`DeviceCatalog` (in `Device.kt`) is an in-memory, process-wide singleton — **not** a real database. `DeviceRepository.loadDevices()` simulates a network call: 1200ms delay on a background executor, result posted to main thread, wrapped with `EspressoIdlingResource` so Espresso tests can wait for it without a manual sleep. Because `DeviceCatalog` is a singleton, instrumented tests that add/delete devices must call `DeviceCatalog.reset()` in `@Before` (see `ResetDeviceCatalogRule.kt`) or state leaks across tests in the same instrumentation process.
+`DeviceCatalog` (in `Device.kt`) is an in-memory, process-wide singleton — **not** a real database. The fragment does not read it for the initial load; it asks `requireContext().appContainer.deviceRepository` (`AppContainer.kt` / `KotlinTestApp.kt`) for a `DeviceRepository`, which is an interface. Production wires `SimulatedNetworkDeviceRepository`: 1200ms delay on a background executor, result posted to the main thread. Instrumented tests run under `TestApp`, whose container provides `FakeDeviceRepository` (posts `DeviceCatalog.all` straight to the main looper), so Espresso needs no IdlingResource to wait for it — see [[test-architecture]] section 3. Because `DeviceCatalog` is a singleton, instrumented tests that add/delete devices must reset it before the Activity launches (`ResetDeviceCatalogRule`) or state leaks across tests in the same instrumentation process.
 
 ## Behavior
 
 - `onViewCreated()`: disables search, wires `DeviceAdapter` (click → detail), wires FAB (→ add), then calls `loadDevices()`.
-- `loadDevices()`: shows the progress bar, calls `DeviceRepository.loadDevices { ... }`; on result, stores `allDevices`, submits to the adapter, hides progress bar, re-enables search. Guards against a fragment view that was destroyed mid-flight (`if (_binding == null) return@loadDevices`).
+- `loadDevices()`: shows the progress bar, calls `deviceRepository.loadDevices { ... }` on the injected instance; on result, stores `allDevices`, submits to the adapter, hides progress bar, re-enables search. Guards against a fragment view that was destroyed mid-flight (`if (_binding == null) return@loadDevices`).
 - `filterDevices(query)`: client-side `contains(query, ignoreCase = true)` on `device.name`; toggles `text_empty_state` vs `recycler_devices` visibility based on the filtered result.
 - Row click → `Intent(DeviceDetailActivity::class.java)` with `EXTRA_DEVICE_ID`, launched via `deviceDetailLauncher` (`registerForActivityResult`). On `RESULT_OK` + `EXTRA_DELETED == true`: `refreshList()` (re-reads `DeviceCatalog.all`, re-applies the current query) + a `text_device_deleted` Snackbar.
 - FAB click → `Intent(AddDeviceActivity::class.java)`, launched via `addDeviceLauncher`. On `RESULT_OK` + `EXTRA_ADDED == true`: same `refreshList()` + a `text_device_added` Snackbar.

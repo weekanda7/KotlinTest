@@ -33,7 +33,7 @@ Started via `deviceDetailLauncher.launch(...)` from `DeviceListFragment` with `E
 
 ## Window insets & back-arrow gotcha
 
-Root view `device_detail` has `ViewCompat.setOnApplyWindowInsetsListener` padding for `systemBars()`, and `app:navigationIcon` is `@drawable/ic_arrow_back` (not `?attr/homeAsUpIndicator`, which resolves to nothing under this app's `NoActionBar` theme). This was the screen where the "back arrow does nothing" bug was first diagnosed — see [[edge-to-edge-insets]] for the full root cause, since the same fix had to be repeated on [[screen-device-list-shell]] and [[screen-add-device]] too.
+Root view `device_detail` calls `applySystemBarInsetsPadding()` for the `systemBars()` insets, and `app:navigationIcon` is `@drawable/ic_arrow_back` (not `?attr/homeAsUpIndicator`, which resolves to nothing under this app's `NoActionBar` theme). This was the screen where the "back arrow does nothing" bug was first diagnosed — see [[edge-to-edge-insets]] for the full root cause, since the same fix had to be repeated on [[screen-device-list-shell]] and [[screen-add-device]] too.
 
 ## Navigation
 
