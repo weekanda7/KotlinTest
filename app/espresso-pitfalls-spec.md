@@ -77,6 +77,24 @@ Espresso 會自動同步 UI thread 的 `Looper` 訊息佇列和動畫，但**看
 
 ---
 
+## 9. Headless CI 上的完整 image 會讓每條測試都拿不到視窗焦點 — GMD 用 ATD
+
+把測試搬上 GitHub Actions 的 Gradle-managed devices 之後，同一套 22 條測試在 `aosp-atd`（API 33）全綠，在完整的 Pixel 8 / API 37 / `google` image 上 21 條全紅，而且**每條都是同一個例外、都發生在該測試的第一次 `onView`**：
+
+```
+androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException:
+Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds.
+... has-window-focus=false ...
+```
+
+Activity 有起來、DecorView 有畫出來，但 WindowManager 一直沒把視窗焦點交給它，代表**畫面上有別的東西壓在 app 上**：剛從 snapshot 恢復的完整 image 常見的是鎖定畫面（keyguard）、「System UI isn't responding」的 ANR 對話框、Google Play services 起不來的 crash 對話框。2 核心加軟體 GPU 的 runner 讓 SystemUI 和 GMS 慢到會 ANR，對話框一跳出來焦點就沒了。ATD image 沒有 SystemUI、沒有 keyguard、沒有 Google apps，所以什麼都不會蓋住你的 app。
+
+**做法**：CI 只跑 ATD（本專案：`pixel8api30atd` + `pixel8api33atd`），完整 image 的覆蓋留給本機有 GPU 的 AVD。如果一定要在 headless CI 跑完整 image，標準做法是在自訂 `AndroidJUnitRunner.onStart()` 用 `UiAutomation.executeShellCommand` 做裝置整理：`wm dismiss-keyguard`、`input keyevent KEYCODE_WAKEUP`、`settings put global hide_error_dialogs 1`，並關閉三個動畫 scale（或 `testOptions.animationsDisabled = true`）。
+
+**排查方法論**：看到「全部失敗、時間都差不多、第一次 `onView` 就死」，先懷疑裝置狀態而不是測試碼；例外訊息裡 `has-window-focus=false` 就是關鍵字。另外 GMD 只會把 emulator 輸出中含大寫 `ERROR` 的行放進錯誤訊息，`FATAL`（例如磁碟不足）和小寫的載入器錯誤（缺 `libpulse.so.0`）都會被吞成空的 `[]`，要用 `--debug` 把 `AvdManager` 的 log 撈出來才看得到。
+
+---
+
 ## 8. 除錯方法論小結
 
 這次排查全程都是靠貼 `./gradlew connectedAndroidTest` 的完整輸出，不是憑感覺猜：

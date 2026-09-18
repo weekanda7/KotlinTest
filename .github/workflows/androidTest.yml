@@ -23,15 +23,16 @@ jobs:
     # boots ("Not enough space to create userdata partition ... need 7372.80 MB"), so two
     # devices on one runner would fight over the same few GB; two runners also finish in
     # parallel instead of one after the other. The `ci` group in app/build.gradle.kts stays
-    # for local runs (make gmdCi).
+    # for local runs (make gmdCi). ATD images only - see the note on the devices in
+    # app/build.gradle.kts for why the full API 37 google image was dropped.
     strategy:
       fail-fast: false
       matrix:
         include:
+          - device: pixel8api30atd
+            image: system-images;android-30;aosp_atd;x86_64
           - device: pixel8api33atd
             image: system-images;android-33;aosp_atd;x86_64
-          - device: pixel8api37
-            image: system-images;android-37.0;google_apis;x86_64
     name: ${{ matrix.device }}
     steps:
       - uses: actions/checkout@v7
@@ -113,40 +114,19 @@ jobs:
       # Caches the Gradle user home (wrapper dist, dependency cache) between runs.
       - uses: gradle/actions/setup-gradle@v6
 
-      # --debug: AGP's AvdManager logs every line the emulator prints at info/debug level and
-      #   surfaces only the ones containing "ERROR" (a FATAL line slipped through that filter
-      #   once), so the full log goes to a file for the diagnostics step and the artifact,
-      #   while the console keeps only the lifecycle/warning/error lines.
       # swiftshader_indirect: software GPU - hosted runners have none (from the GMD docs).
       # The login fixture secrets are optional: secretProperty() in app/build.gradle.kts treats
       # an empty env var as "not provided" and falls back to secrets.defaults.properties.
+      # If an emulator ever refuses to start again ("Unable to start Android emulator ...
+      # Error message from emulator process = []" says nothing by itself), re-run with
+      # `--debug 2>&1 | tee gradle-debug.log`: AGP's AvdManager logs the emulator's own
+      # output at debug level, and the runner-side checks are `df -h`, `ls -l /dev/kvm`,
+      # `emulator -accel-check` and the two -version calls above.
       - name: Run instrumented tests on ${{ matrix.device }}
-        run: |
-          set -o pipefail
-          ./gradlew ${{ matrix.device }}DebugAndroidTest \
-            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            --debug 2>&1 | tee gradle-debug.log | grep -E '\[(LIFECYCLE|WARN|ERROR|QUIET)\]'
+        run: ./gradlew ${{ matrix.device }}DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
         env:
           TEST_LOGIN_EMAIL: ${{ secrets.TEST_LOGIN_EMAIL }}
           TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
-
-      # What the emulator itself said during GMD's launches, plus the three things that have
-      # actually bitten this job so far: disk space, KVM access, missing host libraries.
-      - name: Emulator diagnostics
-        if: failure()
-        run: |
-          echo "==== emulator output captured by GMD (AvdManager lines, filtered, last 120) ===="
-          grep -F '[com.android.build.gradle.internal.AvdManager]' gradle-debug.log \
-            | grep -E 'FATAL|PANIC|ERROR|USER_WARNING|emulator version|Starting Emulator|Failed to|Deleting' \
-            | tail -n 120 || echo "(no AvdManager lines found)"
-          echo "==== disk ===="
-          df -h
-          echo "==== kvm ===="
-          ls -l /dev/kvm || true
-          "$SDK_ROOT/emulator/emulator" -accel-check || true
-          echo "==== engines ===="
-          "$SDK_ROOT/emulator/emulator" -version | head -n 1 || true
-          "$SDK_ROOT/emulator/emulator" -no-window -version | head -n 1 || true
 
       - name: Upload test reports
         if: always()
@@ -156,4 +136,3 @@ jobs:
           path: |
             app/build/reports/androidTests/managedDevice/
             app/build/outputs/androidTest-results/managedDevice/
-            gradle-debug.log

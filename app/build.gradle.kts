@@ -77,16 +77,20 @@ android {
             // (the ATD image has no NDK translation, so nothing else could run there), an
             // Apple-silicon Mac boots arm64-v8a ones.
             val hostAbi = if (System.getProperty("os.arch") in setOf("aarch64", "arm64")) "arm64-v8a" else "x86_64"
+            // Only Automated Test Devices (aosp-atd) here. They strip SystemUI, launcher, IME
+            // and background services, which is exactly what makes them boot fast and stay
+            // quiet on a headless 2-core CI runner. A full image (tried: Pixel 8 / API 37 /
+            // google) failed every Espresso test there with RootViewWithoutFocusException -
+            // the keyguard / ANR dialogs of a slow SystemUI never handed window focus to the
+            // app. Full-image coverage stays on the hand-made Pixel_8 AVD (make androidTest).
             localDevices {
-                // Same profile/API as the hand-made Pixel_8 AVD: the "does it also pass on GMD" baseline.
-                create("pixel8api37") {
+                // Lowest API level ATD images exist for (30-33); the GMD docs' own example.
+                create("pixel8api30atd") {
                     device = "Pixel 8"
-                    apiLevel = 37
-                    systemImageSource = "google"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
                     testedAbi = hostAbi
                 }
-                // Automated Test Device: no SystemUI/launcher/IME/background services, ~20% faster.
-                // Headless only - fine for these tests, not for anything that inspects real chrome.
                 create("pixel8api33atd") {
                     device = "Pixel 8"
                     apiLevel = 33
@@ -98,8 +102,8 @@ android {
                 // ManagedDevices no longer exposes `devices` (the container the older docs
                 // reference); look devices up in `localDevices` (or `allDevices`) instead.
                 create("ci") {
+                    targetDevices.add(localDevices["pixel8api30atd"])
                     targetDevices.add(localDevices["pixel8api33atd"])
-                    targetDevices.add(localDevices["pixel8api37"])
                 }
             }
         }
