@@ -75,14 +75,44 @@ jobs:
       # swiftshader_indirect: software GPU - hosted runners have none (from the GMD docs).
       # The login fixture secrets are optional: secretProperty() in app/build.gradle.kts treats
       # an empty env var as "not provided" and falls back to secrets.defaults.properties.
+      # --continue: if one device fails to boot, still set up and run the other one, so a
+      #   single run tells us whether the problem is device-specific (ATD vs google image).
       - name: Run instrumented tests on Gradle-managed devices
         run: >
           ./gradlew ciGroupDebugAndroidTest
+          --continue
           --max-workers=1
           -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
         env:
           TEST_LOGIN_EMAIL: ${{ secrets.TEST_LOGIN_EMAIL }}
           TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
+
+      # GMD only surfaces emulator lines containing "ERROR" (AvdSnapshotHandler.kt) and logs
+      # the rest at debug level, so "Error message from emulator process = []" means the
+      # emulator died without saying "ERROR" - a loader failure, a PANIC, or a crash. This
+      # step reproduces GMD's launch by hand and prints what the emulator actually says.
+      - name: Emulator diagnostics
+        if: failure()
+        run: |
+          set -x
+          id
+          ls -l /dev/kvm || true
+          EMU="$SDK_ROOT/emulator/emulator"
+          "$EMU" -version || true
+          "$EMU" -accel-check || true
+          ldd "$SDK_ROOT/emulator/qemu/linux-x86_64/qemu-system-x86_64-headless" | grep -i "not found" || echo "headless qemu: no missing shared libraries"
+          export ANDROID_AVD_HOME="$HOME/.android/avd/gradle-managed"
+          ls -la "$ANDROID_AVD_HOME" || true
+          cat "$ANDROID_AVD_HOME"/*.avd/config.ini || true
+          AVD="$(ls "$ANDROID_AVD_HOME" 2>/dev/null | grep -m1 '\.ini$' | sed 's/\.ini$//' || true)"
+          if [ -z "$AVD" ]; then
+            AVDMANAGER="$(command -v avdmanager || ls "$SDK_ROOT"/cmdline-tools/*/bin/avdmanager | head -n 1)"
+            echo no | "$AVDMANAGER" create avd -n diag -k "system-images;android-33;aosp_atd;x86_64" -d pixel_8 --force \
+              || echo no | "$AVDMANAGER" create avd -n diag -k "system-images;android-33;aosp_atd;x86_64" --force
+            AVD=diag
+          fi
+          echo "==== booting @$AVD by hand with GMD's flags (150 s cap) ===="
+          timeout 150 "$EMU" "@$AVD" -no-window -no-boot-anim -no-audio -gpu swiftshader_indirect -no-snapshot-load -verbose -show-kernel 2>&1 | tail -n 200 || true
 
       - name: Upload test reports
         if: always()
