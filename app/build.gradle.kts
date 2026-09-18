@@ -72,16 +72,26 @@ android {
     }
     testOptions {
         managedDevices {
+            // AGP 9 defaults testedAbi to x86_64 and warns that AGP 10 flips the default to
+            // arm64-v8a. Pin it to the host instead: an x86_64 CI runner boots x86_64 images
+            // (the ATD image has no NDK translation, so nothing else could run there), an
+            // Apple-silicon Mac boots arm64-v8a ones.
+            val hostAbi = if (System.getProperty("os.arch") in setOf("aarch64", "arm64")) "arm64-v8a" else "x86_64"
             localDevices {
+                // Same profile/API as the hand-made Pixel_8 AVD: the "does it also pass on GMD" baseline.
                 create("pixel8api37") {
                     device = "Pixel 8"
                     apiLevel = 37
                     systemImageSource = "google"
+                    testedAbi = hostAbi
                 }
+                // Automated Test Device: no SystemUI/launcher/IME/background services, ~20% faster.
+                // Headless only - fine for these tests, not for anything that inspects real chrome.
                 create("pixel8api33atd") {
                     device = "Pixel 8"
                     apiLevel = 33
                     systemImageSource = "aosp-atd"
+                    testedAbi = hostAbi
                 }
             }
             groups {

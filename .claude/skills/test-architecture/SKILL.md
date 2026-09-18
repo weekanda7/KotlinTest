@@ -97,3 +97,15 @@ This only works because the app has **no real auth guard** anywhere - no Activit
 3. Reuse `ResetDeviceCatalogRule` if the screen touches `DeviceCatalog`; don't invent a parallel reset mechanism. If the screen needs a new async/external dependency, route it through `AppContainer` and fake it in `TestAppContainer` (section 3) rather than reaching for an `IdlingResource`.
 4. Any new test-only secret/fixture value goes through `secretProperty()` → `testInstrumentationRunnerArguments` in `app/build.gradle.kts`, documented in `secrets.defaults.properties` - never hardcoded in the test file, never in a `buildConfigField`.
 5. **Update this skill doc** whenever the structure itself changes (new top-level folder, new Rule convention, new shared helper, new container dependency) - see [[android-id-naming]] section 7 for why skill docs need to stay in sync with the code they describe.
+
+## 8. Gradle-managed devices & CI
+
+Two emulators are defined under `testOptions.managedDevices.localDevices` in `app/build.gradle.kts` and grouped as `ci`:
+
+- `pixel8api37` - Pixel 8 / API 37 / `google` image: the same profile as the hand-made `Pixel_8` AVD, so it answers "does the suite also pass when Gradle owns the emulator".
+- `pixel8api33atd` - Pixel 8 / API 33 / `aosp-atd` image: an Automated Test Device (no SystemUI, launcher, IME or background services, hardware rendering off). Faster and headless-only; `typeText()` there is pure key events, and system-bar insets are 0, so it cannot cover the IME flakiness in `app/espresso-pitfalls-spec.md` #3 or the padding fix in [[edge-to-edge-insets]] visually.
+- `testedAbi` is pinned to the host ABI (`x86_64` on the CI runner, `arm64-v8a` on an Apple-silicon Mac) because AGP 10 flips the default and the ATD image has no NDK translation.
+
+Tasks: `./gradlew pixel8api37DebugAndroidTest` (`make gmd`), `./gradlew ciGroupDebugAndroidTest` (`make gmdCi`). AVDs and snapshots live in `~/.android/avd/gradle-managed`; `./gradlew cleanManagedDevices` removes them. Reports land in `app/build/reports/androidTests/managedDevice/` and JUnit XML in `app/build/outputs/androidTest-results/managedDevice/`. GMD supports API 27+ only, so `minSdk 24` still needs a hand-made AVD.
+
+`.github/workflows/androidTest.yml` runs the `ci` group on every push/PR. The three things it has to do that a laptop does not: open `/dev/kvm` to the runner user (udev rule), run the emulator with `-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect` (no GPU on hosted runners), and pre-install the emulator + system images with `sdkmanager` before Gradle starts. The last one exists because the configuration cache runs the two `<device>Setup` tasks in parallel and, on a cold runner, both tried to install the same `emulator` package - one failed, the other booted a half-installed binary. `--max-workers=1` on the test invocation keeps the two emulators from cold-booting side by side on a 4-vCPU runner. Login fixture secrets are optional there: `secretProperty()` treats an empty env var as unset.
