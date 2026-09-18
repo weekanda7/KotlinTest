@@ -33,7 +33,6 @@ class DeviceSearchTest {
     @Test
     fun searchingByName_filtersToMatchingDevices() {
         DeviceListPage.search("router")
-
         DeviceRowActions.assertRowVisible("router-main")
         DeviceRowActions.assertRowAbsent("server-01")
     }
@@ -51,6 +50,7 @@ class DeviceSearchTest {
         DeviceListPage.clearSearch()
 
         DeviceCatalog.all.forEach { device ->
+            DeviceRowActions.scrollToRow(device.name)
             DeviceRowActions.assertRowVisible(device.name)
         }
     }

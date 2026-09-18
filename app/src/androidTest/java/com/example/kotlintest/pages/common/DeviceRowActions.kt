@@ -25,9 +25,14 @@ object DeviceRowActions {
             )
         )
     }
-
     fun assertRowVisible(deviceName: String) {
         onView(withId(R.id.recycler_devices)).check(matches(hasDescendant(withText(deviceName))))
+    }
+
+    fun scrollToRow(deviceName: String) {
+        onView(withId(R.id.recycler_devices)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(deviceName)))
+        )
     }
 
     fun assertRowAbsent(deviceName: String) {

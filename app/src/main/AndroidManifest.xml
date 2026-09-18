@@ -29,7 +29,8 @@
             android:exported="false" />
         <activity
             android:name=".DeviceListActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".DeviceDetailActivity"
             android:exported="false" />

@@ -1,6 +1,7 @@
 package com.example.kotlintest.pages.device
 
 import androidx.appcompat.R as AppCompatR
+import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
@@ -22,11 +23,15 @@ object DeviceListPage {
     // together - scope to the toolbar to disambiguate.
     private fun toolbarTitle(textRes: Int) = allOf(withText(textRes), isDescendantOfA(withId(R.id.toolbar)))
 
+    // The Devices tab's SearchView can leave the soft keyboard up (or mid-animation),
+    // which sits over the bottom nav and swallows the tap - dismiss it first.
     fun openDevicesTab() {
+        closeSoftKeyboard()
         onView(withId(R.id.navigation_devices)).perform(click())
     }
 
     fun openSettingsTab() {
+        closeSoftKeyboard()
         onView(withId(R.id.navigation_settings)).perform(click())
     }
 

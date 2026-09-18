@@ -35,6 +35,7 @@ class DeviceListActivityTest {
     @Test
     fun deviceList_showsAllMockDevices() {
         DeviceCatalog.all.forEach { device ->
+            DeviceRowActions.scrollToRow(device.name)
             DeviceRowActions.assertRowVisible(device.name)
         }
     }

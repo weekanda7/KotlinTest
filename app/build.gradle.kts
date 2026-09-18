@@ -10,7 +10,9 @@ plugins {
 //   3. the given default
 // See secrets.defaults.properties for the list of keys this project expects.
 fun secretProperty(name: String, default: String = ""): String {
-    System.getenv(name)?.let { return it }
+    // A CI env var wired to an undefined secret (e.g. `${{ secrets.X }}` on a fork PR)
+    // arrives as an empty string, not as unset - treat blank as "not provided".
+    System.getenv(name)?.takeIf { it.isNotBlank() }?.let { return it }
     val secretsFile = rootProject.file("secrets.properties")
     if (secretsFile.exists()) {
         val props = Properties()
@@ -67,6 +69,30 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+    testOptions {
+        managedDevices {
+            localDevices {
+                create("pixel8api37") {
+                    device = "Pixel 8"
+                    apiLevel = 37
+                    systemImageSource = "google"
+                }
+                create("pixel8api33atd") {
+                    device = "Pixel 8"
+                    apiLevel = 33
+                    systemImageSource = "aosp-atd"
+                }
+            }
+            groups {
+                // ManagedDevices no longer exposes `devices` (the container the older docs
+                // reference); look devices up in `localDevices` (or `allDevices`) instead.
+                create("ci") {
+                    targetDevices.add(localDevices["pixel8api33atd"])
+                    targetDevices.add(localDevices["pixel8api37"])
+                }
+            }
+        }
     }
 }
 
