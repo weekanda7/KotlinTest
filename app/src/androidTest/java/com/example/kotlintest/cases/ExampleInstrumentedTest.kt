@@ -3,6 +3,8 @@ package com.example.kotlintest.cases
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 
+import com.example.kotlintest.marks.Critical
+
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -15,6 +17,7 @@ import org.junit.Assert.*
  */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
+    @Critical
     @Test
     fun useAppContext() {
         // Context of the app under test.
