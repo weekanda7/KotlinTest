@@ -70,6 +70,11 @@ android {
         viewBinding = true
         buildConfig = true
     }
+    lint {
+        // `make lint` runs lintFix, which would silently bump dependency versions.
+        // Version upgrades are a deliberate decision, not a lint auto-fix.
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+    }
     testOptions {
         managedDevices {
             // AGP 9 defaults testedAbi to x86_64 and warns that AGP 10 flips the default to

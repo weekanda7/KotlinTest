@@ -1,4 +1,4 @@
-.PHONY: help build clean test androidTest gmd gmdCi install lint
+.PHONY: help build clean test androidTest gmd gmdCi install lint format lint-check
 
 # ---------------------------------------------------------------------------
 # Instrumented-test filters (pytest-style selection). All optional; leave them
@@ -61,7 +61,9 @@ help:
 	@echo "  make gmd         - run instrumented tests on a Gradle-managed ATD (DEVICE=$(DEVICE))"
 	@echo "  make gmdCi       - run instrumented tests on the 'ci' device group (ATD API 30 + API 33)"
 	@echo "  make install     - install debug APK on a connected device/emulator"
-	@echo "  make lint        - run Android lint"
+	@echo "  make format      - auto-fix Kotlin formatting only (ktlint via Spotless, fast)"
+	@echo "  make lint        - auto-fix: Android lint safe fixes + format"
+	@echo "  make lint-check  - verify only, no file changes (for CI)"
 	@echo ""
 	@echo "Test filters for androidTest / gmd / gmdCi (all optional, combined as AND):"
 	@echo "  TEST=login.LoginActivityTest            one class (short name under cases/)"
@@ -97,5 +99,19 @@ gmdCi:
 install:
 	./gradlew installDebug
 
+# Kotlin formatting only - the fast one, like `ruff format`.
+format:
+	./gradlew spotlessApply
+
+# Auto-fix, like `ruff check --fix && ruff format`.
+# lintFix deliberately fails the build whenever it edits a file ("sources were modified
+# after compilation"), so on failure re-run a plain lint: it passes if the only reason
+# was applied fixes, and still fails on real errors. Format last so lint's edits get
+# formatted too.
 lint:
-	./gradlew lintDebug
+	./gradlew lintFixDebug || ./gradlew lintDebug
+	./gradlew spotlessApply
+
+# Verify only - fails on any formatting or Android lint issue, changes nothing.
+lint-check:
+	./gradlew spotlessCheck lintDebug

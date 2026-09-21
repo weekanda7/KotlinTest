@@ -57,7 +57,9 @@ make test         # JVM unit tests
 make androidTest  # instrumented tests on the connected device / running AVD
 make gmd          # instrumented tests on the Gradle-managed ATD (Pixel 8 / API 33)
 make gmdCi        # the same two devices CI uses (API 30 + API 33)
-make lint         # Android lint
+make format       # auto-fix Kotlin formatting (ktlint via Spotless), fast
+make lint         # auto-fix: Android lint safe fixes + format
+make lint-check   # verify only (CI), no file changes
 ```
 
 Requirements: Android Studio's SDK (or command-line tools) with an emulator; Gradle provisions its
