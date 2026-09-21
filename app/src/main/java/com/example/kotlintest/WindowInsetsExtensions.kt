@@ -27,7 +27,7 @@ fun View.applySystemBarInsetsPadding() {
             left = initialLeft + systemBars.left,
             top = initialTop + systemBars.top,
             right = initialRight + systemBars.right,
-            bottom = initialBottom + systemBars.bottom,
+            bottom = initialBottom + systemBars.bottom
         )
         insets
     }

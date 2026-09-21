@@ -21,7 +21,8 @@ object DeviceRowActions {
     fun clickRowNamed(deviceName: String) {
         onView(withId(R.id.recycler_devices)).perform(
             RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
-                hasDescendant(withText(deviceName)), click()
+                hasDescendant(withText(deviceName)),
+                click()
             )
         )
     }

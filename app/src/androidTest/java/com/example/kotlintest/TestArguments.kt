@@ -9,10 +9,9 @@ import androidx.test.platform.app.InstrumentationRegistry
  */
 object TestArguments {
 
-    fun require(key: String): String =
-        requireNotNull(InstrumentationRegistry.getArguments().getString(key)) {
-            "Missing instrumentation argument '$key'. It is set in app/build.gradle.kts " +
-                "(testInstrumentationRunnerArguments) - run the tests through Gradle, and see " +
-                "secrets.defaults.properties for the expected keys."
-        }
+    fun require(key: String): String = requireNotNull(InstrumentationRegistry.getArguments().getString(key)) {
+        "Missing instrumentation argument '$key'. It is set in app/build.gradle.kts " +
+            "(testInstrumentationRunnerArguments) - run the tests through Gradle, and see " +
+            "secrets.defaults.properties for the expected keys."
+    }
 }

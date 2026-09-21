@@ -38,7 +38,7 @@ class AddDeviceActivity : AppCompatActivity() {
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
 
@@ -66,7 +66,7 @@ class AddDeviceActivity : AppCompatActivity() {
             ipAddress = ipAddress,
             isOnline = binding.checkboxOnline.isChecked,
             type = binding.dropdownType.text.toString(),
-            installDate = installDate,
+            installDate = installDate
         )
         DeviceCatalog.add(device)
 

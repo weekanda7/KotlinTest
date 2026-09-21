@@ -27,7 +27,7 @@ class DeviceListFragment : Fragment() {
     }
 
     private val addDeviceLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
+        ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK &&
             result.data?.getBooleanExtra(AddDeviceActivity.EXTRA_ADDED, false) == true
@@ -38,7 +38,7 @@ class DeviceListFragment : Fragment() {
     }
 
     private val deviceDetailLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
+        ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK &&
             result.data?.getBooleanExtra(DeviceDetailActivity.EXTRA_DELETED, false) == true
@@ -48,11 +48,7 @@ class DeviceListFragment : Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentDeviceListBinding.inflate(inflater, container, false)
         return binding.root
     }

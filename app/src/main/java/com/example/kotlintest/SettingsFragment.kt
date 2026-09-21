@@ -27,16 +27,12 @@ class SettingsFragment : Fragment() {
                 Snackbar.make(
                     binding.root,
                     R.string.text_notification_permission_denied,
-                    Snackbar.LENGTH_SHORT,
+                    Snackbar.LENGTH_SHORT
                 ).show()
             }
         }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -69,7 +65,7 @@ class SettingsFragment : Fragment() {
         val needsRuntimePermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
                 requireContext(),
-                Manifest.permission.POST_NOTIFICATIONS,
+                Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
 
         if (needsRuntimePermission) {

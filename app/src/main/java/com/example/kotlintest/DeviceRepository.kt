@@ -24,7 +24,7 @@ fun interface DeviceRepository {
  */
 class SimulatedNetworkDeviceRepository(
     private val source: () -> List<Device> = { DeviceCatalog.all },
-    private val delayMs: Long = DEFAULT_NETWORK_DELAY_MS,
+    private val delayMs: Long = DEFAULT_NETWORK_DELAY_MS
 ) : DeviceRepository {
 
     private val backgroundExecutor = Executors.newSingleThreadExecutor()

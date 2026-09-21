@@ -15,9 +15,7 @@ import android.os.Looper
  * contract - "the result arrives asynchronously on the main thread" - intact, so the
  * loading-state code path in DeviceListFragment is still exercised.
  */
-class FakeDeviceRepository(
-    private val source: () -> List<Device> = { DeviceCatalog.all },
-) : DeviceRepository {
+class FakeDeviceRepository(private val source: () -> List<Device> = { DeviceCatalog.all }) : DeviceRepository {
 
     private val mainHandler = Handler(Looper.getMainLooper())
 

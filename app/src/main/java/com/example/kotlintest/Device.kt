@@ -6,7 +6,7 @@ data class Device(
     val ipAddress: String,
     val isOnline: Boolean,
     val type: String = "Other",
-    val installDate: String = "",
+    val installDate: String = ""
 )
 
 /**
@@ -23,7 +23,7 @@ object DeviceCatalog {
         Device("2", "server-02", "192.168.1.11", isOnline = true, type = "Server"),
         Device("3", "router-main", "192.168.1.1", isOnline = true, type = "Router"),
         Device("4", "printer-office", "192.168.1.42", isOnline = false, type = "Printer"),
-        Device("5", "nas-backup", "192.168.1.50", isOnline = false, type = "NAS"),
+        Device("5", "nas-backup", "192.168.1.50", isOnline = false, type = "NAS")
     )
 
     private var devices = defaultDevices()
