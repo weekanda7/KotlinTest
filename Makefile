@@ -29,6 +29,10 @@ K        ?=
 # Gradle-managed device used by `make gmd` (see app/build.gradle.kts).
 DEVICE   ?= pixel8api33atd
 
+# Extra Gradle flags for the instrumented-test targets, e.g. the software GPU on CI:
+#   GRADLE_ARGS=-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+GRADLE_ARGS ?=
+
 BASE_PKG  := com.example.kotlintest
 CASES_PKG := $(BASE_PKG).cases
 MARKS_PKG := $(BASE_PKG).marks
@@ -88,13 +92,13 @@ test:
 	./gradlew testDebugUnitTest
 
 androidTest:
-	./gradlew connectedDebugAndroidTest $(FILTER_ARGS)
+	./gradlew connectedDebugAndroidTest $(GRADLE_ARGS) $(FILTER_ARGS)
 
 gmd:
-	./gradlew $(DEVICE)DebugAndroidTest $(FILTER_ARGS)
+	./gradlew $(DEVICE)DebugAndroidTest $(GRADLE_ARGS) $(FILTER_ARGS)
 
 gmdCi:
-	./gradlew --continue ciGroupDebugAndroidTest $(FILTER_ARGS)
+	./gradlew --continue ciGroupDebugAndroidTest $(GRADLE_ARGS) $(FILTER_ARGS)
 
 install:
 	./gradlew installDebug

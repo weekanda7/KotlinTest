@@ -1,10 +1,43 @@
 name: androidTest
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  # Manual run from the Actions tab ("Run workflow"). Every filter is optional; leave them
+  # all empty to run the whole suite. They map 1:1 onto the Makefile's test filters (see
+  # `make help`), which hand them to AndroidJUnitRunner. Filters combine as AND.
+  workflow_dispatch:
+    inputs:
+      device:
+        description: Which managed device(s) to run on
+        type: choice
+        default: all
+        options: [all, pixel8api30atd, pixel8api33atd]
+      mark:
+        description: 'MARK - only tests with this mark (marks/Marks.kt)'
+        type: choice
+        default: none
+        options: [none, Smoke, Regression, Critical, High, Medium, Low]
+      test:
+        description: 'TEST - Class or Class#method under cases/, comma-separated (e.g. login.LoginActivityTest#login_withInvalidEmail_showsEmailError)'
+        type: string
+      package:
+        description: 'PKG - package under cases/ (e.g. device)'
+        type: string
+      exclude:
+        description: 'EXCLUDE - Class or Class#method to skip, same format as TEST'
+        type: string
+      not_mark:
+        description: 'NOT_MARK - skip tests with any of these marks, comma-separated (e.g. Low,Medium)'
+        type: string
+      k:
+        description: 'K - regex on pkg.Class#method (e.g. .*withEmpty.*)'
+        type: string
 
-# A newer push to the same branch/PR cancels the run that is still going.
+# A newer push to the same branch/PR cancels the run that is still going. Manual runs get
+# a group of their own (run_id), so they never cancel - or get cancelled by - another run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.ref }}
   cancel-in-progress: true
 
 # Where the hosted Ubuntu image keeps its Android SDK (ANDROID_HOME on the runner).
@@ -27,13 +60,15 @@ jobs:
     # app/build.gradle.kts for why the full API 37 google image was dropped.
     strategy:
       fail-fast: false
+      # Both devices on push/PR; a manual run can pick one. (A plain `include:` list can't be
+      # filtered this way - an include entry that matches no combination is added back as a
+      # new one - so the device list is computed and the system image looked up below.)
       matrix:
-        include:
-          - device: pixel8api30atd
-            image: system-images;android-30;aosp_atd;x86_64
-          - device: pixel8api33atd
-            image: system-images;android-33;aosp_atd;x86_64
+        device: ${{ fromJSON(inputs.device && inputs.device != 'all' && format('["{0}"]', inputs.device) || '["pixel8api30atd","pixel8api33atd"]') }}
     name: ${{ matrix.device }}
+    env:
+      # System image each managed device boots - keep in sync with app/build.gradle.kts.
+      SYSTEM_IMAGE: ${{ fromJSON('{"pixel8api30atd":"system-images;android-30;aosp_atd;x86_64","pixel8api33atd":"system-images;android-33;aosp_atd;x86_64"}')[matrix.device] }}
     steps:
       - uses: actions/checkout@v7
 
@@ -99,7 +134,7 @@ jobs:
         run: |
           SDKMANAGER="$(command -v sdkmanager || ls "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -n 1)"
           yes | "$SDKMANAGER" --licenses > /dev/null || true
-          "$SDKMANAGER" --install "emulator" "${{ matrix.image }}"
+          "$SDKMANAGER" --install "emulator" "$SYSTEM_IMAGE"
           "$SDK_ROOT/emulator/emulator" -version | head -n 3 || echo "::warning::windowed emulator engine failed to load"
           "$SDK_ROOT/emulator/emulator" -no-window -version | head -n 3 || echo "::warning::headless emulator engine failed to load"
           echo "free on / after SDK install: $(df -h / | tail -n 1)"
@@ -122,9 +157,28 @@ jobs:
       # `--debug 2>&1 | tee gradle-debug.log`: AGP's AvdManager logs the emulator's own
       # output at debug level, and the runner-side checks are `df -h`, `ls -l /dev/kvm`,
       # `emulator -accel-check` and the two -version calls above.
+      # The test filters reach make as environment variables (make reads TEST, MARK, ... from
+      # the environment through their `?=` defaults) instead of being pasted into the script,
+      # so free-text inputs are never interpreted by this step's shell. On push/PR they are
+      # all empty and the whole suite runs.
       - name: Run instrumented tests on ${{ matrix.device }}
-        run: ./gradlew ${{ matrix.device }}DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+        run: |
+          {
+            echo "### ${{ matrix.device }}"
+            echo '```'
+            make -n gmd | tail -n 1
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          make gmd
         env:
+          DEVICE: ${{ matrix.device }}
+          GRADLE_ARGS: -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
+          TEST: ${{ inputs.test }}
+          PKG: ${{ inputs.package }}
+          EXCLUDE: ${{ inputs.exclude }}
+          MARK: ${{ inputs.mark != 'none' && inputs.mark || '' }}
+          NOT_MARK: ${{ inputs.not_mark }}
+          K: ${{ inputs.k }}
           TEST_LOGIN_EMAIL: ${{ secrets.TEST_LOGIN_EMAIL }}
           TEST_LOGIN_PASSWORD: ${{ secrets.TEST_LOGIN_PASSWORD }}
 
