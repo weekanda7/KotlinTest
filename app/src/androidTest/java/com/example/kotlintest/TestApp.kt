@@ -7,10 +7,10 @@ package com.example.kotlintest
  */
 class TestApp : KotlinTestApp() {
 
-    override val appContainer: AppContainer by lazy { TestAppContainer() }
+    override val appContainer: TestAppContainer by lazy { TestAppContainer() }
 }
 
 class TestAppContainer : AppContainer {
 
-    override val deviceRepository: DeviceRepository = FakeDeviceRepository()
+    override var deviceRepository: DeviceRepository = FakeDeviceRepository()
 }

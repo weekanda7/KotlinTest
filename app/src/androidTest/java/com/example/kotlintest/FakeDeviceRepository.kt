@@ -2,9 +2,6 @@ package com.example.kotlintest
 
 import android.os.Handler
 import android.os.Looper
-import androidx.test.espresso.idling.CountingIdlingResource
-import java.util.concurrent.Executors
-val deviceLoad = CountingIdlingResource("DeviceLoad")
 
 /**
  * Test double for [DeviceRepository]: hands back the current [DeviceCatalog] contents on
@@ -21,15 +18,8 @@ val deviceLoad = CountingIdlingResource("DeviceLoad")
 class FakeDeviceRepository(private val source: () -> List<Device> = { DeviceCatalog.all }) : DeviceRepository {
 
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val backgroundExecutor = Executors.newSingleThreadExecutor()
+
     override fun loadDevices(onResult: (List<Device>) -> Unit) {
-        deviceLoad.increment()
-        backgroundExecutor.execute {
-            Thread.sleep(2000)
-            mainHandler.post {
-                onResult(source())
-                deviceLoad.decrement()
-            }
-        }
+        mainHandler.post { onResult(source()) }
     }
 }
